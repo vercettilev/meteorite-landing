@@ -1,0 +1,313 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* --svh is a hundredth of the screen's height with the browser's bars showing. Browsers from before 2022 only know the plain height. */
+:root { color-scheme: dark; --svh: 1vh; }
+@supports (height: 1svh) { :root { --svh: 1svh; } }
+
+/*
+  The page's measure: a column 1320px wide, which on a wide screen grows with it, so that the
+  stone, which is placed by the screen, stays in the column. --pad is the column's side padding,
+  the same as the px-6 md:px-14 on the containers.
+*/
+:root { --wrap: clamp(1320px, 85vw, 2200px); --pad: 1.5rem; }
+@media (min-width: 768px) { :root { --pad: 3.5rem; } }
+
+/*
+  Up to 1920px wide the type is as set. Beyond that the column goes on growing, and the type grows
+  with it, with all that is measured in rem, so that a large screen shows the same page larger
+  rather than the same type adrift in it. It stops where the column stops (2200px), and never goes
+  below the size the visitor's browser asks for.
+*/
+html { font-size: clamp(100%, 0.8333vw, 134.8%); scroll-padding-top: 24px; }
+
+/*
+  The scrollbar in the page's own colours: a hairline of bone on the black, like the rules between
+  the figures, that brightens under the pointer. Firefox takes the standard properties. Chrome,
+  Edge and Safari take the -webkit- ones, which they would ignore once the standard ones were set.
+  Touch screens keep their own, which only show while scrolling.
+*/
+@supports not selector(::-webkit-scrollbar) {
+  html { scrollbar-width: thin; scrollbar-color: rgb(233 227 214 / 0.38) #0f0e0c; }
+}
+@media (hover: hover) and (pointer: fine) {
+  ::-webkit-scrollbar { width: 10px; height: 10px; background: #0f0e0c; }
+  ::-webkit-scrollbar-track { background: #0f0e0c; }
+  ::-webkit-scrollbar-thumb {
+    min-height: 3rem;
+    border: 3px solid transparent;
+    border-radius: 999px;
+    background: rgb(233 227 214 / 0.38) padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover { border-width: 2px; background-color: rgb(233 227 214 / 0.62); }
+  ::-webkit-scrollbar-thumb:active { border-width: 2px; background-color: #e9e3d6; }
+  ::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+  ::-webkit-scrollbar-corner { background: #0f0e0c; }
+}
+
+body {
+  font-feature-settings: "liga", "dlig", "kern";
+  font-size: 1.125rem;
+  background: #0f0e0c;
+  color: #e9e3d6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  overflow-x: clip;
+}
+
+.label {
+  font-family: var(--font-caps), Georgia, serif;
+  font-size: 1.0625rem;
+  line-height: 1.3;
+  letter-spacing: 0.04em;
+  font-feature-settings: "liga", "dlig";
+}
+
+/*
+  The stone sits on a stage that runs from the hero down through the cut, so its stand becomes
+  the spine of the page. Its place and size live here, and the shader reads them back.
+*/
+.stage {
+  /* On a very short screen the hero is taller than the screen. The stone still fits the screen, and sits where it will be centred once held. */
+  --hero-h: max(calc(var(--svh) * 100), 22rem);
+  /* Sized by the screen's height, and never more than the column allows, or on a large, tall screen the stone would crowd out the words. */
+  --R: min(calc(var(--svh) * 41), 26vw, calc(var(--wrap) * 0.3));
+  /* Where the words begin, from the left of the screen; the stone's right edge is on the column's right edge, or just short of the screen's where the column is the screen. */
+  --inset: calc(max((100vw - var(--wrap)) / 2, 0px) + var(--pad));
+  --cx: calc(min(100vw - var(--inset) + var(--pad), 100vw - 2.5rem) - var(--R));
+  --cy: calc(var(--hero-h) - var(--svh) * 50);
+  /* The room for words beside the stone, so that at no width do they run into it. */
+  --room: calc(var(--cx) - var(--R) - var(--inset) - 2.5rem);
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  background: #0f0e0c;
+  touch-action: pan-y pinch-zoom;
+}
+/* Its empty space lets taps through to what lies under it: the stone, and on a phone the hint that asks to use the tilt. */
+.hero { min-height: var(--hero-h); pointer-events: none; }
+.hero :is(a, button, h1, p) { pointer-events: auto; }
+.hero-copy { position: relative; z-index: 1; max-width: var(--room); margin-block: auto; padding-bottom: 2.5rem; }
+/* The headline is sized by the room beside the stone ("Own a piece" is about five of its ems), and on a short screen by the height. */
+.hero-title { font-size: clamp(2.25rem, min(6.8vw, calc(var(--svh) * 21), calc(var(--room) / 5)), 6.5rem); line-height: 1; }
+
+/* The box the stone is drawn in. It lies over the hero, and the stand runs on below it. */
+.stone-track { position: relative; }
+.stone-pin { position: absolute; inset: 0 0 auto; height: var(--hero-h); pointer-events: none; }
+
+.stone-anchor {
+  position: absolute;
+  left: calc(var(--cx) - var(--R));
+  top: calc(var(--cy) - var(--R));
+  width: calc(var(--R) * 2);
+  height: calc(var(--R) * 2);
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Only without WebGL or JavaScript: a still of the stone, on the page's own black, laid where the live one would be. */
+.stone-fallback {
+  position: absolute;
+  left: calc(var(--cx) - var(--R) * 1.8385);
+  top: calc(var(--cy) - var(--R) * 1.4596);
+  width: calc(var(--R) * 3.7236);
+  max-width: none;
+  height: auto;
+  mix-blend-mode: lighten;
+}
+
+.stone-hint {
+  position: absolute;
+  right: calc(100% - var(--cx) - var(--R) * 0.98);
+  top: calc(var(--cy) + var(--R) * 0.8);
+  font-size: 1rem;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.stone-hint-in { animation: hint-in 1800ms ease 5200ms both; }
+/* On an iPhone the hint is a button: the tilt can only be used once the visitor has tapped to allow it. */
+.stone-tilt {
+  margin: -0.875rem -0.75rem;
+  padding: 0.875rem 0.75rem;
+  font-style: italic;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.22em;
+  pointer-events: auto;
+}
+.stone-tilt:disabled { pointer-events: none; }
+.stone-hint-touch { display: none; }
+@media (hover: none) {
+  .stone-hint-mouse { display: none; }
+  .stone-hint-touch { display: inline; }
+}
+@keyframes hint-in { from { opacity: 0; } }
+
+/*
+  What is said while the stone is cut, ending in the name and the field for an email. As plain
+  text it stands beside the stand. This is all there is without WebGL or with motion reduced.
+*/
+.cut { position: relative; }
+.cut-text {
+  display: grid;
+  align-content: center;
+  gap: 1.25rem;
+  min-height: calc(var(--cy) + var(--R) * 2.62 - var(--hero-h));
+  padding-block: 12vh;
+}
+.cut-line { max-width: min(11em, var(--room)); font-size: clamp(2.25rem, 4.2vw, 3.75rem); line-height: 1.04; }
+.cut-join { display: grid; justify-items: start; gap: 1.5rem; }
+.cut-join-logo { width: 9.375rem; height: auto; }
+/* The field keeps to the room beside the stone too. */
+.cut-join form { max-width: min(24rem, var(--room)); }
+/* Where "One small step" lands. As plain text the field is just above it, so it is kept well down the screen. */
+.join-anchor { scroll-margin-top: 70vh; }
+
+/*
+  With the stone alive, the page holds it in place for a stretch of scrolling and cuts it in two.
+  --cut runs from 0 to 1 over that stretch, and each line shows only for its own part of it.
+*/
+.stage[data-cut="live"] .stone-pin {
+  position: sticky;
+  top: min(0px, calc(var(--svh) * 100 - var(--hero-h)));
+}
+/* The held box keeps its own height in the flow, or it would not let go in time. The hero lies back over it. */
+.stage[data-cut="live"] .hero { margin-top: calc(var(--hero-h) * -1); }
+/*
+  The hero's words give way as the stone turns to offer the cut, and are gone before its first line
+  shows. On a tall screen they have scrolled away by then; on a short one (a phone on its side, a
+  small window) they would still be there, under it.
+*/
+.stage[data-cut="live"] .hero-copy > * { opacity: clamp(0, (0.15 - var(--cut, 0)) / 0.07, 1); }
+.stage[data-cut="live"] .cut {
+  --stretch: calc(var(--svh) * 260);
+  height: calc(var(--stretch) + var(--hero-h));
+  margin-top: calc(var(--hero-h) * -1);
+  pointer-events: none;
+}
+.stage[data-cut="live"] .cut-text {
+  position: sticky;
+  top: 0;
+  height: calc(var(--svh) * 100);
+  min-height: 0;
+  padding-block: 0;
+  gap: 0;
+}
+.stage[data-cut="live"] .cut-step {
+  grid-area: 1 / 1;
+  opacity: clamp(0, min((var(--cut, 0) - var(--from)) / 0.045, (var(--to) - var(--cut, 0)) / 0.045), 1);
+  transform: translateY(calc(clamp(0, (var(--from) + 0.07 - var(--cut, 0)) / 0.07, 1) * 1.5rem));
+}
+/* While a link travels the page through the cut (lib/glide.ts), the three lines stay away: they would only flicker past. */
+[data-glide] .stage[data-cut="live"] .cut-step.cut-line { opacity: 0; }
+/* The end of the cut takes the pointer, and only once the mark has formed (HeroStone.tsx sets data-join). Before that it is not there to tab to. */
+.stage[data-cut="live"] .cut-join { pointer-events: auto; }
+.stage[data-cut="live"]:not([data-join]) .cut-join { visibility: hidden; }
+/* With the live stone the link lands where the mark has formed: a screen's height before the stone is let go. */
+.stage[data-cut="live"] .join-anchor { position: absolute; left: 0; bottom: var(--hero-h); height: 0; scroll-margin-top: 0; }
+/* Once let go, the stand runs on down the page, and the foot of the page waits below its foot. */
+.stage[data-cut="live"] .stone-foot { height: calc(var(--cy) + var(--R) * 2.62 - var(--hero-h)); }
+
+/* Upright, or too narrow for the two to stand side by side: the stone goes under the words. A phone on its side keeps them side by side. */
+@media (max-aspect-ratio: 11/10), (max-width: 559px) {
+  .stage {
+    --R: min(56vw, calc(var(--svh) * 28));
+    --cx: 60vw;
+    /* The headline's size. 21rem above the stone holds the words at a phone's size; whatever more the headline takes on a larger screen is added to it. */
+    --title: clamp(2.5rem, 14.5vw, 4.75rem);
+    --cy: max(calc(var(--svh) * 100 - var(--R) * 1.38), calc(21rem + max(0rem, (var(--title) - 4.75rem) * 2) + var(--R)));
+    --hero-h: calc(var(--cy) + var(--R) * 1.38);
+  }
+  /* An upright tablet, or a monitor turned on its end, has the width for a larger headline. */
+  @media (min-width: 768px) { .stage { --title: clamp(4.75rem, 9.4vw, 6.5rem); } }
+  .hero-copy { max-width: none; margin-block: 0; padding-bottom: 0; }
+  .hero-title { font-size: var(--title); }
+  .stage[data-cut="live"] .hero-copy > * { opacity: 1; }
+  .stone-hint { right: auto; left: 1.5rem; top: calc(var(--cy) + var(--R) * 1.06); }
+  @media (min-width: 768px) { .stone-hint { left: 3.5rem; } }
+  /* The stone is below the words here, so the lines of the cut sit above it and nothing runs beside the stand. */
+  .cut-text { min-height: 0; }
+  .cut-line { max-width: none; font-size: clamp(2rem, 8.6vw, 2.75rem); }
+  /* The end of the cut has to fit above the stone here, so it is drawn tighter and starts nearer the top. */
+  .cut-join { gap: 0.625rem; }
+  .cut-join-logo { width: 7.5rem; }
+  .cut-join form { max-width: 24rem; }
+  .cut-join label { margin-top: 0.625rem; font-size: 0.8125rem; }
+  .cut-join [role="status"] { margin-top: 0.375rem; }
+  .stage[data-cut="live"] .cut { --stretch: calc(var(--svh) * 230); }
+  .stage[data-cut="live"] .cut-text { align-content: start; padding-top: calc(var(--svh) * 13); }
+  .stage[data-cut="live"] .cut-join { margin-top: calc(var(--svh) * -10); }
+  /* Here the stone sits above the stand's foot within its own box, so nothing runs on below. */
+  .stage[data-cut="live"] .stone-foot { height: 10vh; }
+}
+
+/* A phone on its side: the end of the cut is drawn as tight as on a phone held upright, so the field and its message fit the screen's height. */
+@media (min-width: 560px) and (min-aspect-ratio: 11/10) and (max-height: 459px) {
+  .cut-join { gap: 0.625rem; }
+  .cut-join-logo { width: 7.5rem; }
+  .cut-join label { margin-top: 0.625rem; font-size: 0.8125rem; }
+  .cut-join [role="status"] { margin-top: 0.375rem; }
+}
+
+/*
+  On a phone the stone runs below the first screen and its hint with it, so there the hint sits at
+  the end of the hero's last line instead, and comes a little sooner.
+*/
+.hero-hint { display: none; font-size: 1rem; white-space: nowrap; }
+@media (max-aspect-ratio: 11/10) and (max-width: 767px), (max-width: 559px) {
+  .stone-hint { display: none; }
+  .hero-hint { display: block; }
+  .hero-hint .stone-hint-in { animation-delay: 3200ms; }
+}
+
+/* The line corrects itself: a pen strikes "world", and "space" opens beside it. */
+.struck { position: relative; display: inline-block; color: #a9a397; animation: struck-dim 900ms ease 2300ms backwards; }
+.struck svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  color: #e9e3d6;
+  animation: strike 560ms cubic-bezier(0.6, 0.05, 0.3, 1) 2000ms backwards;
+}
+.inserted {
+  display: inline-block;
+  max-width: 3em;
+  margin-left: 0.24em;
+  font-style: italic;
+  white-space: nowrap;
+  vertical-align: baseline;
+  clip-path: inset(-0.4em -0.1em -0.4em 0);
+  animation: insert 1300ms cubic-bezier(0.22, 0.7, 0.2, 1) 2450ms backwards;
+}
+@keyframes struck-dim { from { color: #e9e3d6; } }
+@keyframes strike { from { clip-path: inset(-50% 100% -50% 0); } to { clip-path: inset(-50% 0 -50% 0); } }
+@keyframes insert { from { max-width: 0; margin-left: 0; opacity: 0; } }
+
+.quiet-link {
+  transition: color 300ms ease;
+}
+.quiet-link:hover { color: #fff; }
+
+/* The email field shows that it is in use on the rule beneath it, not with a box around it. */
+.field { transition: border-color 300ms ease, box-shadow 300ms ease; }
+.field:focus-within { border-color: #e9e3d6; box-shadow: 0 1px 0 #e9e3d6; }
+.field input:focus-visible { outline: none; }
+
+:focus-visible { outline: 1px solid #e9e3d6; outline-offset: 3px; }
+
+.reveal { transition: opacity 1600ms ease-out; }
+.reveal-wait { opacity: 0.001; }
+
+.settle { animation: settle 800ms ease-out both; }
+@keyframes settle {
+  from { opacity: 0.7; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .settle, .stone-hint-in, .struck, .struck svg, .inserted { animation: none; }
+  .quiet-link, .reveal { transition: none !important; }
+}

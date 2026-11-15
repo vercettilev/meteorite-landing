@@ -1,0 +1,31 @@
+{
+  "name": "meteorite-landing",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3417",
+    "build": "next build",
+    "start": "next start -p 3417",
+    "lint": "tsc --noEmit",
+    "textures": "node scripts/stone-textures.mjs",
+    "stand": "node scripts/prepare-stand.mjs",
+    "still": "node scripts/save-still.mjs public/assets",
+    "waitlist": "node --env-file=.env.local scripts/waitlist.mjs"
+  },
+  "dependencies": {
+    "@vercel/blob": "^2.9.0",
+    "next": "^16.4.5",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.18.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.6",
+    "sharp": "^0.35.5",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.9.2"
+  }
+}
