@@ -1,11 +1,15 @@
-import { createHash } from "node:crypto";
-import { head, put } from "@vercel/blob";
+import { after } from "next/server";
+import { sendConfirmation } from "@/lib/confirmation";
+import { join } from "@/lib/list";
 
 /*
-  The waitlist. Each address is kept as one private file in the project's Blob store
-  (meteorite-waitlist), named by a hash of the address, so signing up twice keeps the first
-  date and no list of names sits in a path. Only someone holding the store's token can read
-  it: `npm run waitlist` prints the list. The privacy notice on /legal describes exactly this.
+  The waitlist. An address is kept in the project's private Blob store and given a place on the
+  list and a link of its own (lib/list.ts says how, and what the order is). The answer is that
+  place, so the page can say it. An address that is already on the list gets the same answer and
+  changes nothing: typing it in again is how someone finds their place on another device. A new
+  address is sent one email to say it is on the list (lib/confirmation.ts), with the link that
+  takes it off again (app/leave); an address already there is sent nothing. The privacy notice
+  on /legal describes exactly this.
 */
 export const runtime = "nodejs";
 
@@ -17,41 +21,28 @@ export async function POST(request: Request) {
   if (origin && new URL(origin).host !== request.headers.get("host")) return reply(403);
   if (Number(request.headers.get("content-length") ?? 0) > 1024) return reply(413);
 
-  let body: { email?: unknown; consent?: unknown };
+  let body: { email?: unknown; consent?: unknown; from?: unknown };
   try {
     body = await request.json();
   } catch {
     return reply(400);
   }
   const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+  /* `consent` is the form saying its button was pressed, under the line that says what pressing it is for (components/JoinForm.tsx). */
   if (email.length > 254 || !EMAIL.test(email) || body.consent !== true) return reply(400);
 
-  const pathname = `waitlist/${createHash("sha256").update(email).digest("hex")}.json`;
   try {
-    if (await exists(pathname)) return reply(200);
-    const record = { email, consent: true, at: new Date().toISOString() };
-    await put(pathname, JSON.stringify(record), {
-      access: "private",
-      addRandomSuffix: false,
-      allowOverwrite: true,
-      contentType: "application/json",
-    });
-    return reply(200);
+    /* `from` is the code of the link the visitor came by, if they came by one. One that is not on the list is passed over. */
+    const { fresh, leave, ...standing } = await join(email, typeof body.from === "string" ? body.from : undefined);
+    /* Once the form has its answer, so a slow or failed email never turns a kept address into an error. `leave` is the way off the list: it goes in the email, to the address's own inbox, and never in the answer to the page. */
+    if (fresh) after(() => sendConfirmation(email, standing, leave));
+    return reply(200, standing);
   } catch (error) {
     console.error("waitlist", error);
     return reply(500);
   }
 }
 
-async function exists(pathname: string) {
-  try {
-    await head(pathname);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function reply(status: number) {
-  return Response.json({ ok: status === 200 }, { status, headers: { "Cache-Control": "no-store" } });
+function reply(status: number, more?: object) {
+  return Response.json({ ok: status === 200, ...more }, { status, headers: { "Cache-Control": "no-store" } });
 }

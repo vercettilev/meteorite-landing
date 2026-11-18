@@ -27,8 +27,8 @@ export function Nav({ home = true }: { home?: boolean }) {
         <div className="flex shrink-0 items-center gap-4 min-[420px]:gap-6 md:gap-8">
           {home && <SoundToggle />}
           {home ? (
-            /* It travels down through the cut to the form, and with a mouse leaves the cursor in the field. */
-            <GlideLink href="#join" field='input[name="email"]' className={STEP}>
+            /* It travels down through the cut to the form, and with a mouse leaves the cursor in that form's field (not the one in the hero). */
+            <GlideLink href="#join" field='input[aria-describedby="join-status"]' className={STEP}>
               One small step
             </GlideLink>
           ) : (

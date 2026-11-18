@@ -1,3 +1,4 @@
+import { JoinForm } from "./JoinForm";
 import { Nav } from "./Nav";
 
 export function Hero() {
@@ -29,6 +30,10 @@ export function Hero() {
             <p className="label text-ash">Coming to Solana.</p>
             {/* On a phone the stone's hint shows here, where it is seen before any scrolling. HeroStone.tsx fills it. */}
             <div className="hero-hint" data-stone-hint />
+          </div>
+          {/* The list on the first screen, for whoever arrives from a link and will not scroll. The same field waits at the end of the cut and at the foot of the page. */}
+          <div className="hero-join mt-10 md:mt-12">
+            <JoinForm id="hero" />
           </div>
         </div>
       </div>

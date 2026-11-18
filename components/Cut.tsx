@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { CLAIMS } from "@/lib/share";
 import { JoinForm } from "./JoinForm";
 import { Logo } from "./Logo";
 
@@ -7,12 +8,13 @@ import { Logo } from "./Logo";
   name and the field for an email. Without the live stone this is a plain passage of text with the
   field at its end. With it, each shows in turn while the stone is cut: "from" and "to" are how far
   through the cut it stays, and keep time with beats() in HeroStone.tsx. Once a stone is held, the
-  third line can become "We found it."
+  third line can become "We found it." The claims themselves are kept in lib/share.ts, because a
+  post on X opens with one of them.
 */
 const STEPS = [
-  { text: "The rarest thing you can own is not from here.", from: 0.16, to: 0.34 },
-  { text: "It cannot be minted. Only found.", from: 0.42, to: 0.62 },
-  { text: "Older than anything you own.", from: 0.66, to: 0.78 },
+  { text: CLAIMS[0], from: 0.16, to: 0.34 },
+  { text: CLAIMS[1], from: 0.42, to: 0.62 },
+  { text: CLAIMS[2], from: 0.66, to: 0.78 },
 ];
 
 const shown = (from: number, to: number) => ({ "--from": from, "--to": to }) as CSSProperties;

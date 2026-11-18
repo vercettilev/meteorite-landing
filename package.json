@@ -10,7 +10,8 @@
     "textures": "node scripts/stone-textures.mjs",
     "stand": "node scripts/prepare-stand.mjs",
     "still": "node scripts/save-still.mjs public/assets",
-    "waitlist": "node --env-file=.env.local scripts/waitlist.mjs"
+    "card": "node scripts/list-card.mjs public/assets",
+    "waitlist": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file=.env.local scripts/waitlist.mjs"
   },
   "dependencies": {
     "@vercel/blob": "^2.9.0",

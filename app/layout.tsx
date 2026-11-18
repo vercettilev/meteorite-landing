@@ -35,7 +35,8 @@ export const viewport: Viewport = { themeColor: "#0F0E0C", colorScheme: "dark" }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${serif.variable} ${sans.variable} ${caps.variable}`}>
+    /* The landing page's first script marks this element when the device is already on the list (components/Landing.tsx), before React has seen it. */
+    <html lang="en" className={`${serif.variable} ${sans.variable} ${caps.variable}`} suppressHydrationWarning>
       <body className="font-sans">{children}</body>
     </html>
   );

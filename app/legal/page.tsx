@@ -13,10 +13,12 @@ export const metadata: Metadata = {
 /*
   Our standards, the legal notice and the privacy notice. Every line here is a claim: keep each one
   true, have it reviewed by counsel, and change the date when any of them changes. The privacy
-  notice describes what the code does today (the waitlist form, no cookies, no analytics); if that
-  changes, this changes with it.
+  notice describes what the code does today (the waitlist form, the place and the link it gives,
+  what a device is left to remember, the one email it sends through Resend, no cookies, no
+  analytics); if that changes, this changes with it. The order of the list is the one lib/list.ts
+  keeps and `npm run waitlist` prints: "Your place" says it, and the reveal has to be sent in it.
 */
-const UPDATED = "12 November 2026";
+const UPDATED = "18 November 2026";
 
 const STANDARDS = [
   { name: "Vault", text: "Insured storage, with dated checks you can read." },
@@ -40,15 +42,19 @@ const write = CONTACT_EMAIL ? (
 const PRIVACY: { name: string; text: ReactNode }[] = [
   {
     name: "What we collect",
-    text: "If you join the waitlist: the email address you enter, and your consent to be emailed. Nothing else is asked for. If you connect a wallet in the app, the page reads its public address in your browser to show your position; it is not sent to us or stored by us.",
+    text: "If you join the waitlist: the email address you enter, your consent to be emailed, and when you joined. Nothing else is asked for. You are given a link of your own, and if you came by someone else's link, we keep which link it was. If you connect a wallet in the app, the page reads its public address in your browser to show your position; it is not sent to us or stored by us.",
   },
   {
     name: "Why",
-    text: "Only to email you when the first specimen is revealed, as the form says. Your consent is the basis for it, and you can withdraw it at any time.",
+    text: "To tell you that you are on the list, and to email you when the first specimen is revealed, as the form says. Your consent is the basis for it, and you can withdraw it at any time.",
+  },
+  {
+    name: "Your place",
+    text: "The list is kept in order of how many people each has brought by their link, most first, and among those who have brought the same number, in the order they joined. The reveal is sent in that order. Your link, and the card it shows when it is shared, say your place to anyone who has the link. They carry no name and no address.",
   },
   {
     name: "Who sees it",
-    text: "Vercel, which keeps our list for us in private storage, and no one else. If we use a service to send the email, it acts for us too. We do not sell or share it.",
+    text: "Vercel, which keeps our list for us in private storage, and Resend, which sends our email for us. Both may handle it outside your country, including in the United States. No one else sees it, and we do not sell or share it.",
   },
   {
     name: "How long",
@@ -58,14 +64,14 @@ const PRIVACY: { name: string; text: ReactNode }[] = [
     name: "Your rights",
     text: (
       <>
-        You can ask us to show, correct or delete what we hold about you, or withdraw your consent, by writing to {write}. You can also complain to the data-protection
-        authority where you live.
+        Every email we send ends with a link that takes your address off the list at once. You can also ask us to show, correct or delete what we hold about you, or
+        withdraw your consent, by writing to {write}, and you can complain to the data-protection authority where you live.
       </>
     ),
   },
   {
     name: "Cookies",
-    text: "This site sets no cookies and uses no analytics or advertising trackers. The app remembers on your device which wallet you last connected, so that it can connect it again; clearing your browser's site data removes it.",
+    text: "This site sets no cookies and uses no analytics or advertising trackers. Once you join, it remembers your link and your place on your device, to show them again, and until you close the tab, the link you came by. The app remembers on your device which wallet you last connected, so that it can connect it again. Clearing your browser's site data removes all of it.",
   },
   {
     name: "Hosting",

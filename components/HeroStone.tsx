@@ -1125,9 +1125,15 @@ export function HeroStone() {
             window.scrollTo(0, Math.round(p * (track.getBoundingClientRect().height - pin.offsetHeight) - hold));
             return settle(seconds);
           },
-          /* Draws the whole stone, its stand and foot, at a given width, and posts the PNG to a local address. */
-          still(width = 2400, at: Vec3 = [-1.3, -1.5, 1.5], yaw = 0.36, url = "http://127.0.0.1:8791/save?name=still.png") {
+          /*
+            Draws the stone, its stand and foot, at a given width, and posts the PNG to a local address.
+            `through` is how far through the cut it is drawn: 0 is the whole stone, 0.77 the polished
+            face (the list's card for whoever has brought someone, app/list/[code]/card), 1 the mark.
+          */
+          still(width = 2400, at: Vec3 = [-1.3, -1.5, 1.5], yaw = 0.36, url = "http://127.0.0.1:8791/save?name=still.png", through = 0) {
             bakeAll();
+            const b = beats(through);
+            const whole = turned(yaw, 0.06);
             const R = width / 3.7236;
             const height = Math.round(R * 4.0745);
             canvas.width = width;
@@ -1140,10 +1146,10 @@ export function HeroStone() {
             gl.uniform2f(uC, R * 1.8385, R * 1.4596);
             gl.uniform1f(uR, R);
             gl.uniform3f(uLamp, at[0], at[1], at[2]);
-            gl.uniformMatrix3fv(uRot, false, turned(yaw, 0.06));
-            gl.uniform1f(uOpen, 0);
-            gl.uniform1f(uSeam, 0);
-            gl.uniform4f(uCut, 0, 0, 0, 0);
+            gl.uniformMatrix3fv(uRot, false, through <= 0 ? whole : b.pose < 1 ? matOf(slerp(quatOf(whole), CUT_POSE, b.pose)) : tipped(TIP * (1 - b.turn)));
+            gl.uniform1f(uOpen, through > 0 ? 1 : 0);
+            gl.uniform1f(uSeam, b.seam);
+            gl.uniform4f(uCut, b.lift, b.lid, b.polish, b.mark);
             gl.uniform1f(uTime, 20);
             gl.uniform1f(uPower, 1);
             gl.uniform1f(uLoaded, 1);

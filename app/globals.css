@@ -87,7 +87,7 @@ body {
 }
 /* Its empty space lets taps through to what lies under it: the stone, and on a phone the hint that asks to use the tilt. */
 .hero { min-height: var(--hero-h); pointer-events: none; }
-.hero :is(a, button, h1, p) { pointer-events: auto; }
+.hero :is(a, button, h1, p, input) { pointer-events: auto; }
 .hero-copy { position: relative; z-index: 1; max-width: var(--room); margin-block: auto; padding-bottom: 2.5rem; }
 /* The headline is sized by the room beside the stone ("Own a piece" is about five of its ems), and on a short screen by the height. */
 .hero-title { font-size: clamp(2.25rem, min(6.8vw, calc(var(--svh) * 21), calc(var(--room) / 5)), 6.5rem); line-height: 1; }
@@ -159,8 +159,8 @@ body {
 .cut-line { max-width: min(11em, var(--room)); font-size: clamp(2.25rem, 4.2vw, 3.75rem); line-height: 1.04; }
 .cut-join { display: grid; justify-items: start; gap: 1.5rem; }
 .cut-join-logo { width: 9.375rem; height: auto; }
-/* The field keeps to the room beside the stone too. */
-.cut-join form { max-width: min(24rem, var(--room)); }
+/* The field keeps to the room beside the stone too, and so does the place that takes its place. */
+.cut-join :is(form, .standing) { max-width: min(24rem, var(--room)); }
 /* Where "One small step" lands. As plain text the field is just above it, so it is kept well down the screen. */
 .join-anchor { scroll-margin-top: 70vh; }
 
@@ -214,9 +214,9 @@ body {
   .stage {
     --R: min(56vw, calc(var(--svh) * 28));
     --cx: 60vw;
-    /* The headline's size. 21rem above the stone holds the words at a phone's size; whatever more the headline takes on a larger screen is added to it. */
+    /* The headline's size. 29.5rem above the stone holds the words and the email field at a phone's size; whatever more the headline takes on a larger screen is added to it. */
     --title: clamp(2.5rem, 14.5vw, 4.75rem);
-    --cy: max(calc(var(--svh) * 100 - var(--R) * 1.38), calc(21rem + max(0rem, (var(--title) - 4.75rem) * 2) + var(--R)));
+    --cy: max(calc(var(--svh) * 100 - var(--R) * 1.38), calc(29.5rem + max(0rem, (var(--title) - 4.75rem) * 2) + var(--R)));
     --hero-h: calc(var(--cy) + var(--R) * 1.38);
   }
   /* An upright tablet, or a monitor turned on its end, has the width for a larger headline. */
@@ -232,9 +232,13 @@ body {
   /* The end of the cut has to fit above the stone here, so it is drawn tighter and starts nearer the top. */
   .cut-join { gap: 0.625rem; }
   .cut-join-logo { width: 7.5rem; }
-  .cut-join form { max-width: 24rem; }
-  .cut-join label { margin-top: 0.625rem; font-size: 0.8125rem; }
+  .cut-join :is(form, .standing) { max-width: 24rem; }
+  .cut-join .join-note { margin-top: 0.625rem; font-size: 0.8125rem; }
   .cut-join [role="status"] { margin-top: 0.375rem; }
+  /* The field on the first screen is drawn as tight as the one at the end of the cut. */
+  .hero-join { margin-top: 2rem; }
+  .hero-join .join-note { margin-top: 0.625rem; font-size: 0.8125rem; }
+  .hero-join [role="status"] { margin-top: 0.375rem; }
   .stage[data-cut="live"] .cut { --stretch: calc(var(--svh) * 230); }
   .stage[data-cut="live"] .cut-text { align-content: start; padding-top: calc(var(--svh) * 13); }
   .stage[data-cut="live"] .cut-join { margin-top: calc(var(--svh) * -10); }
@@ -246,7 +250,7 @@ body {
 @media (min-width: 560px) and (min-aspect-ratio: 11/10) and (max-height: 459px) {
   .cut-join { gap: 0.625rem; }
   .cut-join-logo { width: 7.5rem; }
-  .cut-join label { margin-top: 0.625rem; font-size: 0.8125rem; }
+  .cut-join .join-note { margin-top: 0.625rem; font-size: 0.8125rem; }
   .cut-join [role="status"] { margin-top: 0.375rem; }
 }
 
@@ -286,6 +290,60 @@ body {
 @keyframes strike { from { clip-path: inset(-50% 100% -50% 0); } to { clip-path: inset(-50% 0 -50% 0); } }
 @keyframes insert { from { max-width: 0; margin-left: 0; opacity: 0; } }
 
+/*
+  The list's line corrects itself the same way (components/JoinForm.tsx): "first" is struck and the
+  visitor's own place written in. The pen moves only as they join; on any later visit it is simply
+  so. A place can be longer than "space", so it is given the room.
+*/
+.standing .inserted { max-width: 9em; }
+.standing .struck, .standing .struck svg, .standing .inserted { animation: none; }
+.standing[data-fresh] .struck { animation: struck-dim 900ms ease 1000ms backwards; }
+.standing[data-fresh] .struck svg { animation: strike 560ms cubic-bezier(0.6, 0.05, 0.3, 1) 700ms backwards; }
+.standing[data-fresh] .inserted { animation: insert 1300ms cubic-bezier(0.22, 0.7, 0.2, 1) 1150ms backwards; }
+/* Someone already on the list is not shown the field while the page finds their place (components/Landing.tsx, lib/mine.ts). */
+[data-listed] form[data-join] { visibility: hidden; }
+
+/*
+  The visitor's card, put before them (components/ListPlate.tsx). The page goes dark behind it and
+  does not scroll, and the card stands in a hairline, as it will in a post. The dialog is as large
+  as the screen, so a click anywhere on the dark is a click on it, and closes it; on a short
+  screen it scrolls within itself. The one filled thing on the site is here: the way to X. (The
+  button on /leave is filled the same way: it is the one thing that page is for.)
+*/
+html[data-plate] { overflow: hidden; }
+.plate {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 1.5rem;
+  border: 0;
+  background: transparent;
+  color: #e9e3d6;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.plate[open] { display: flex; }
+.plate::backdrop { background: rgb(15 14 12 / 0.975); }
+/* With room to spare the sheet sits in the middle. Without it, the margins give way and it starts at the top, where it can be scrolled. */
+.plate-sheet { display: grid; gap: 1.5rem; width: min(100%, 46rem); margin: auto; }
+.plate-card { aspect-ratio: 1200 / 630; border: 1px solid rgb(233 227 214 / 0.16); background: #0f0e0c; }
+.plate-card img { display: block; width: 100%; height: 100%; opacity: 0; transition: opacity 900ms ease; }
+.plate-card img[data-drawn] { opacity: 1; }
+.plate-post { padding: 0.8125rem 1.5rem; background: #e9e3d6; color: #0f0e0c; transition: background-color 300ms ease; }
+.plate-post:hover { background: #fff; }
+.plate[open] .plate-sheet > * { animation: plate-in 1000ms cubic-bezier(0.22, 0.7, 0.2, 1) both; }
+.plate[open] .plate-sheet > :nth-child(2) { animation-delay: 120ms; }
+.plate[open] .plate-sheet > :nth-child(3) { animation-delay: 320ms; }
+.plate[open] .plate-sheet > :nth-child(4) { animation-delay: 460ms; }
+.plate[open]::backdrop { animation: plate-dark 500ms ease both; }
+@keyframes plate-in { from { opacity: 0; transform: translateY(0.75rem); } }
+@keyframes plate-dark { from { opacity: 0; } }
+@media (min-width: 768px) { .plate { padding: 3.5rem; } }
+
 .quiet-link {
   transition: color 300ms ease;
 }
@@ -308,6 +366,8 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .settle, .stone-hint-in, .struck, .struck svg, .inserted { animation: none; }
+  .settle, .stone-hint-in, .struck, .struck svg, .inserted, .standing[data-fresh] :is(.struck, .struck svg, .inserted) { animation: none; }
+  .plate[open] .plate-sheet > *, .plate[open]::backdrop { animation: none; }
+  .plate-card img { transition: none; }
   .quiet-link, .reveal { transition: none !important; }
 }
